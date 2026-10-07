@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calculadora de Cabo de Cobre</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#9A4A22">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cabo Cobre">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EDEB; --panel:#FFFFFF; --ink:#18201E; --muted:#5B6662; --line:#C9D1CD;
+  --copper:#9A4A22; --copper-soft:#F3E3D9; --verd:#1F6B5C; --verd-soft:#DDEFEA;
+  --bad:#A3271B; --bad-soft:#F7DEDA; --warn:#8A6100; --warn-soft:#F6ECCD;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121816; --panel:#1B2320; --ink:#E8EEEB; --muted:#9AA7A2; --line:#2F3A36;
+    --copper:#E08A5A; --copper-soft:#3A2519; --verd:#5CC3AA; --verd-soft:#173229;
+    --bad:#F08A7E; --bad-soft:#3B1E1A; --warn:#E6BE5C; --warn-soft:#352C14;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121816; --panel:#1B2320; --ink:#E8EEEB; --muted:#9AA7A2; --line:#2F3A36;
+  --copper:#E08A5A; --copper-soft:#3A2519; --verd:#5CC3AA; --verd-soft:#173229;
+  --bad:#F08A7E; --bad-soft:#3B1E1A; --warn:#E6BE5C; --warn-soft:#352C14;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 "Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:18px 16px 40px}
+h1{font:700 2rem/1.05 "Barlow Condensed","Arial Narrow",sans-serif;margin:6px 0 4px;letter-spacing:.01em}
+h1 span{display:block;font-size:.95rem;font-family:"Barlow",sans-serif;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:6px}
+h2{font:600 1.25rem/1.2 "Barlow Condensed","Arial Narrow",sans-serif;margin:0 0 10px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;margin-top:14px}
+label{display:block;font-weight:600;font-size:.92rem;margin:12px 0 4px}
+label small{font-weight:400;color:var(--muted)}
+input,select{width:100%;font:500 1.15rem "Barlow",sans-serif;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink)}
+input:focus,select:focus,button:focus-visible{outline:3px solid var(--verd);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row label{margin-top:12px}
+.btns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+button{font:600 1rem "Barlow",sans-serif;padding:11px 16px;border-radius:4px;border:1px solid var(--verd);background:var(--verd);color:#fff;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button{color:#0E1513}}
+:root[data-theme="dark"] button{color:#0E1513}
+button.ghost{color:var(--ink)}
+
+/* resultado */
+#res{border-width:2px}
+.verdict{border-radius:4px;padding:14px;margin-bottom:14px}
+.verdict.ok{background:var(--verd-soft);color:var(--verd)}
+.verdict.bad{background:var(--bad-soft);color:var(--bad)}
+.verdict.warn{background:var(--warn-soft);color:var(--warn)}
+.verdict b{display:block;font:700 1.9rem/1.05 "Barlow Condensed",sans-serif}
+.verdict p{margin:6px 0 0;color:var(--ink);font-size:.95rem}
+.big{display:flex;align-items:baseline;gap:10px;margin:4px 0 12px}
+.big .n{font:700 4.2rem/0.9 "Barlow Condensed",sans-serif;color:var(--copper)}
+.big .u{color:var(--muted);font-size:.95rem}
+dl{display:grid;grid-template-columns:1fr auto;margin:0;border-top:1px solid var(--line)}
+dt,dd{padding:8px 0;border-bottom:1px solid var(--line);margin:0}
+dd{font:600 1.1rem "Barlow Condensed",sans-serif;text-align:right}
+.money dd{color:var(--copper)}
+.empty{color:var(--muted);margin:0}
+.note{font-size:.85rem;color:var(--muted);margin:10px 0 0}
+
+/* histórico e referência */
+.hist{list-style:none;padding:0;margin:0}
+.hist li{border-bottom:1px solid var(--line);padding:10px 0;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+.hist .t{font-weight:600}
+.hist .s{font-size:.85rem;color:var(--muted)}
+.hist button{padding:6px 10px;font-size:.85rem}
+details summary{cursor:pointer;font:600 1.25rem "Barlow Condensed",sans-serif}
+.scroll{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;min-width:520px;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px 6px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted)}
+tr.hl td{background:var(--copper-soft)}
+.chips{display:flex;gap:8px;margin-top:8px}
+.chip{padding:6px 14px;font-size:1rem}
+.chip.on{background:var(--verd);border-color:var(--verd);color:#fff}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:14px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+.mode button{border:0;border-radius:0;background:transparent;color:var(--ink);padding:14px 8px;font-size:1.02rem}
+.mode button.on{background:var(--copper);color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mode button.on{color:#1A100A}}
+:root[data-theme="dark"] .mode button.on{color:#1A100A}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Calculadora de cabo de cobre<span>Quanto cobre tem o lote, quanto pagar e se compensa.</span></h1>
+
+  <div class="mode" role="tablist" aria-label="Como você vai calcular">
+    <button type="button" role="tab" id="mA" aria-selected="true" class="on">Pesei a amostra</button>
+    <button type="button" role="tab" id="mB" aria-selected="false">Só tenho a medida</button>
+  </div>
+
+  <!-- MODO A: amostra pesada -->
+  <section id="secA">
+    <h2>Amostra pesada</h2>
+    <div class="row">
+      <div><label for="tot">Peso do cabo inteiro (g)</label><input id="tot" type="number" inputmode="decimal" min="0" step="any" placeholder="ex.: 895"></div>
+      <div><label for="cu">Peso do cobre limpo (g)</label><input id="cu" type="number" inputmode="decimal" min="0" step="any" placeholder="ex.: 595"></div>
+    </div>
+    <p class="note">É o jeito mais seguro: o rendimento sai do cabo real.</p>
+    <div class="row">
+      <div><label for="nvA">Vias (pernas)</label><select id="nvA" class="nv"></select></div>
+      <div><label for="gravA">Bitola gravada <small>(opc.)</small></label><select id="gravA" class="bit"></select></div>
+    </div>
+    <p class="note">Com a bitola, a calculadora avisa se o rendimento ficou abaixo do esperado — sinal de lote misturado ou cabo desbitolado.</p>
+  </section>
+
+  <!-- MODO B: só medida -->
+  <section id="secB" hidden>
+    <h2>Cabo pela medida</h2>
+    <label for="nvB">Número de vias (pernas)</label>
+    <select id="nvB" class="nv"></select>
+    <div class="row">
+      <div><label for="gravB">Bitola de cada via</label><select id="gravB" class="bit"></select></div>
+      <div><label for="extB">ou Ø externo (mm)</label><input id="extB" type="number" inputmode="decimal" min="0" step="any" placeholder="ex.: 13,4"></div>
+    </div>
+    <p class="note" id="sugB">Escolha a bitola ou digite o Ø externo medido no meio do cabo — a calculadora sugere a bitola.</p>
+    <p class="note">Sem pesar, a conta usa o <b>rendimento mínimo</b> de catálogo. Não detecta cabo desbitolado: antes de fechar lote grande, pese uma amostra.</p>
+  </section>
+
+  <section>
+    <h2>Oferta do vendedor</h2>
+    <label for="vend">Vendedor <small>(opcional)</small></label>
+    <input id="vend" type="text" placeholder="ex.: João">
+    <div class="row">
+      <div><label for="lote">Peso do lote (kg)</label><input id="lote" type="number" inputmode="decimal" min="0" step="any" placeholder="ex.: 100"></div>
+      <div><label for="ped">Preço pedido (R$/kg de cabo)</label><input id="ped" type="number" inputmode="decimal" min="0" step="any" placeholder="ex.: 38"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Seus números</h2>
+    <label for="pcu">Você vende o cobre a (R$/kg)</label><input id="pcu" type="number" inputmode="decimal" min="0" step="any" placeholder="ex.: 70">
+    <div class="row">
+      <div><label for="desc">Descascar (R$/kg de cabo)</label><input id="desc" type="number" inputmode="decimal" min="0" step="any" placeholder="ex.: 2"></div>
+      <div><label for="frete">Frete e outros (R$ total)</label><input id="frete" type="number" inputmode="decimal" min="0" step="any" placeholder="ex.: 150"></div>
+    </div>
+    <label for="err">Margem de erro no rendimento (pontos %)</label>
+    <input id="err" type="number" inputmode="decimal" min="0" max="30" step="any" placeholder="ex.: 2">
+    <div class="chips" role="group" aria-label="Atalhos de margem de erro">
+      <button type="button" class="ghost chip" data-e="0">0</button><button type="button" class="ghost chip" data-e="1">1</button><button type="button" class="ghost chip" data-e="2">2</button><button type="button" class="ghost chip" data-e="3">3</button><button type="button" class="ghost chip" data-e="5">5</button>
+    </div>
+    <p class="note">Tira pontos do rendimento antes da conta de preço (ex.: 66,5% − 2 = 64,5%). Seus números ficam salvos neste aparelho.</p>
+  </section>
+
+  <section id="res" aria-live="polite"><p class="empty">Preencha a amostra ou a medida do cabo para ver o resultado.</p></section>
+
+  <div class="btns">
+    <button id="save" type="button">Salvar no histórico</button>
+    <button id="clear" class="ghost" type="button">Novo cálculo</button>
+  </div>
+
+  <section>
+    <h2>Histórico</h2>
+    <ul class="hist" id="hist"></ul>
+  </section>
+
+</div>
+
+<script>
+const D=8.89, RHO=0.017241;
+const B=[
+ [1.5,13.3,2.88,2.95,"1,49–1,55",18.5,20],[2.5,7.98,3.55,3.55,"1,95",28.8,28.8],
+ [4,4.95,4.0,4.2,"2,43–2,45",41.7,46],[6,3.30,4.6,4.6,"3,00",58.7,58.7],
+ [10,1.91,7.76,7.76,"4,16",133,133],[16,1.21,8.9,9.05,"5,45",190,215],
+ [25,0.780,9.8,10.7,"6,2–7,07",271,303],[35,0.554,11.2,11.75,"7,2–7,75",368,391],
+ [50,0.386,13.0,13.8,"9,0–9,4",507,533],[70,0.272,15.1,16.0,"10,7–11,2",703,738],
+ [95,0.206,16.9,17.9,"12,5–13,1",919,955],[120,0.161,19.1,19.5,"14,3–14,7",1160,1170],
+ [150,0.129,21.0,22.0,"16,3",1425,1501],[185,0.106,23.4,23.4,"17,8",1729,1729],
+ [240,0.0801,26.7,26.7,"21,1",2311,2311],[300,0.0641,29.4,30.0,"—",2587,2714],
+ [400,0.0486,32.5,35.5,"24,5–26,5",3781,3785]
+].map(r=>({b:r[0],R:r[1],e1:r[2],e2:r[3],fx:r[4],p1:r[5],p2:r[6],pm:(r[5]+r[6])/2,teo:r[0]*D,min:D*RHO/r[1]*1000}));
+const M={1.5:{2:[8.2,90],3:[8.7,105],4:[9.7,133],5:[10.5,157]},2.5:{2:[9,117],3:[9.8,144],4:[10.7,174],5:[11.7,216]},
+ 4:{2:[10.3,164],3:[10.9,200],4:[12,244],5:[13.3,305]},6:{2:[11.3,211],3:[12,262],4:[13.4,327],5:[14.8,413]},
+ 10:{2:[14.4,336],3:[15.3,415],4:[17.1,520],5:[18.3,663]},16:{2:[16.6,477],3:[17.9,607],4:[19.7,754],5:[22.2,996]},
+ 25:{2:[19.4,681],3:[20.8,874],4:[23,1092],5:[26,1466]},35:{2:[21.9,906],3:[23.4,1158],4:[26.1,1483]},
+ 50:{2:[25.6,1266],3:[27.6,1634],4:[30.5,2058]}};
+const S={16:[42.0,51.5,51.7],25:[47.2,56.6,56.8],35:[43.9,55.1,56.9],50:[45.4,54.7,57.8],70:[48.7,57.8,61.1],95:[50.0,59.3,62.5],120:[52.2,61.7,64.5],150:[53.0,62.9,65.3],185:[53.0,62.6,65.6],240:[54.2,63.9,67.0]};
+
+const $=id=>document.getElementById(id);
+const nf=(x,d=0)=>Number(x).toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const bt=b=>(b<10&&b%1?nf(b,1):nf(b))+" mm²";
+const fm=(n,b)=>n>1?`${n} × ${bt(b)}`:bt(b);
+const num=id=>{const v=parseFloat(String($(id).value).replace(",","."));return isFinite(v)&&v>0?v:null};
+const NV=[[1,"1 via — unipolar / solda"],[2,"2 vias — bipolar"],[3,"3 vias — tripolar"],[4,"4 vias — tetrapolar"]];
+document.querySelectorAll(".nv").forEach(sel=>NV.forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;sel.appendChild(o)}));
+document.querySelectorAll(".bit").forEach(sel=>{const o=document.createElement("option");o.value="";o.textContent="Escolha…";sel.appendChild(o);B.forEach(x=>{const o=document.createElement("option");o.value=x.b;o.textContent=bt(x.b);sel.appendChild(o)})});
+
+let mode="A";
+function setMode(m){mode=m;$("secA").hidden=m!=="A";$("secB").hidden=m!=="B";
+  $("mA").classList.toggle("on",m==="A");$("mB").classList.toggle("on",m==="B");
+  $("mA").setAttribute("aria-selected",m==="A");$("mB").setAttribute("aria-selected",m==="B");calc()}
+$("mA").onclick=()=>setMode("A");$("mB").onclick=()=>setMode("B");
+
+// rendimento de catálogo para n vias e bitola b
+function catRend(n,b){
+  const x=B.find(y=>y.b===b); if(!x) return null;
+  if(n===1) return {min:x.min/x.pm, max:Math.min(x.teo/x.pm,0.92), src:"catálogos de cabo de solda/flexível", ext:x.e1===x.e2?nf(x.e1,1):nf(x.e1,1)+"–"+nf(x.e2,1)};
+  const m=M[b]&&M[b][n], si=S[b]&&n<=4?S[b][n-2]/100:null;
+  if(!m&&!si) return null;
+  let lo=[],hi=[],src=[];
+  if(m){lo.push(n*x.min/m[1]);hi.push(n*x.teo/m[1]);src.push("Cobreflex HEPR")}
+  if(si){lo.push(si);hi.push(si);src.push("Prysmian Sintenax")}
+  return {min:Math.min(...lo),max:Math.max(...hi),src:src.join(" e "),ext:m?nf(m[0],1):null};
+}
+function sugExt(n,ext){
+  let c=[];
+  if(n===1) c=B.filter(x=>ext>=x.e1-0.4&&ext<=x.e2+0.4).map(x=>x.b);
+  else c=Object.keys(M).map(Number).filter(b=>M[b][n]&&Math.abs(M[b][n][0]-ext)<=1.0).sort((a,b)=>Math.abs(M[a][n][0]-ext)-Math.abs(M[b][n][0]-ext));
+  return c;
+}
+
+
+let last=null, lastExtB=null, lastNvB=null;
+function calc(){
+  const out=$("res");
+  const pcu=num("pcu"), lote=num("lote"), desc=num("desc")||0, frete=num("frete")||0, vend=$("vend").value.trim();
+  const err=Math.min(30,Math.max(0,parseFloat(String($("err").value).replace(",","."))||0));
+  document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",+c.dataset.e===err));
+  const ped=num("ped");
+  let rm=null, head="", rows="", v="", hl=null, n=1, desc1="", ok=true;
+
+  if(mode==="A"){
+    const tot=num("tot"), cu=num("cu"), g=parseFloat($("gravA").value)||null; n=parseInt($("nvA").value)||1; hl=g;
+    if(!tot||!cu){out.innerHTML='<p class="empty">Coloque o peso do cabo e o peso do cobre da amostra.</p>';last=null;return}
+    if(cu>tot){out.innerHTML='<div class="verdict bad"><b>Cobre maior que o cabo</b><p>Confira as duas pesagens.</p></div>';last=null;return}
+    rm=cu/tot; const capa=tot-cu;
+    rows+=`<dt>Cobre da amostra</dt><dd>${nf(cu)} g</dd><dt>Capa${n>1?" + enchimento":""}</dt><dd>${nf(capa)} g (${nf((1-rm)*100,1)}%)</dd>`;
+    desc1=`amostra ${nf(tot)} g / ${nf(cu)} g`;
+    if(g){const cr=catRend(n,g);
+      if(cr&&rm<cr.min-0.03){ok=false;v+=`<div class="verdict warn"><b>Rendimento baixo para ${fm(n,g)}</b><p>Catálogo: mínimo de ${nf(cr.min*100)}%. Sua amostra deu ${nf(rm*100,1)}%. Pode ser desbitolado ou lote misturado — tire mais amostras.</p></div>`}}
+    head=`<div class="big"><span class="n">${nf(rm*100,1)}%</span><span class="u">de cobre na amostra</span></div>`;
+  } else {
+    n=parseInt($("nvB").value)||1; const ext=num("extB");
+    if(ext){const c=sugExt(n,ext);
+      $("sugB").innerHTML=c.length?`Ø ${nf(ext,1)} mm em ${n>1?n+" vias":"cabo de 1 via"} parece: <b>${c.map(b=>fm(n,b)).join(" ou ")}</b>.`:`Nenhuma bitola de catálogo com Ø ${nf(ext,1)} mm em ${n} via(s). Escolha a bitola pela gravação.`;
+      if(c.length&&(!$("gravB").value||ext!==lastExtB||n!==lastNvB)) $("gravB").value=c[0];
+      lastExtB=ext;lastNvB=n;
+    } else $("sugB").textContent="Escolha a bitola ou digite o Ø externo medido no meio do cabo — a calculadora sugere a bitola.";
+    const g=parseFloat($("gravB").value)||null; hl=g;
+    if(!g){out.innerHTML='<p class="empty">Escolha a bitola ou digite o Ø externo.</p>';last=null;return}
+    const cr=catRend(n,g);
+    if(!cr){out.innerHTML=`<div class="verdict warn"><b>Sem dado de catálogo para ${fm(n,g)}</b><p>Para essa formação, só pesando uma amostra.</p></div>`;last=null;return}
+    rm=cr.min;
+    v=`<div class="verdict warn"><b>Estimativa por medida: ${fm(n,g)}</b><p>Catálogo (${cr.src}): de ${nf(cr.min*100)}% a ${nf(cr.max*100)}% de cobre. A conta usa o mínimo. Cabo desbitolado rende menos — pese uma amostra antes de fechar lote grande.</p></div>`;
+    if(cr.ext) rows+=`<dt>Ø externo de catálogo</dt><dd>${cr.ext} mm</dd>`;
+    desc1=`medida ${fm(n,g)}`;
+    head=`<div class="big"><span class="n">${nf(rm*100)}%</span><span class="u">de cobre estimado (mínimo de catálogo)</span></div>`;
+  }
+
+  const rend=Math.max(0,rm-err/100);
+  if(err) head=head.replace('</span></div>',`<br>conta de preço usa <b>${nf(rend*100,1)}%</b> (−${nf(err,1)} de margem de erro)</span></div>`);
+  rows+=`<dt>Cobre por kg de cabo (na conta)</dt><dd>${nf(rend*1000)} g</dd>`;
+
+  let money="", lucro=null;
+  if(pcu){
+    const bruto=pcu*rend, teto=Math.max(0,bruto-desc-(lote?frete/lote:0));
+    money=`<dl class="money" style="margin-top:12px"><dt>Preço de empate (lucro zero)</dt><dd>R$ ${nf(teto,2)}/kg</dd></dl>`;
+    if(lote&&ped){
+      const cobreKg=lote*rend, pago=lote*ped, descT=lote*desc, venda=cobreKg*pcu, custo=pago+descT+frete; lucro=venda-custo;
+      const mg=venda>0?lucro/venda*100:0, quem=vend||"O vendedor";
+      let vc,vt,vp;
+      if(lucro<=0){vc="bad";vt="Não compensa";vp=`Prejuízo de R$ ${nf(-lucro,2)}. Acima de R$ ${nf(teto,2)}/kg você perde dinheiro.`}
+      else{vc="ok";vt="Compensa";vp=`Sobra R$ ${nf(lucro,2)} limpo (${nf(mg,1)}% da venda). O empate é R$ ${nf(teto,2)}/kg.`}
+      money+=`<div class="verdict ${vc}" style="margin-top:14px"><b>${vt}</b><p>${quem} pede R$ ${nf(ped,2)}/kg por ${nf(lote)} kg de cabo. ${vp}</p></div>
+      <dl class="money"><dt>Você paga pelo lote</dt><dd>R$ ${nf(pago,2)}</dd><dt>Cobre que sobra</dt><dd>${nf(cobreKg,1)} kg</dd><dt>Seu custo por kg de cobre</dt><dd>R$ ${nf(ped/rend,2)}</dd><dt>Descascar + frete</dt><dd>R$ ${nf(descT+frete,2)}</dd><dt>Venda do cobre</dt><dd>R$ ${nf(venda,2)}</dd><dt>Lucro do lote</dt><dd>R$ ${nf(lucro,2)}</dd></dl>`;
+    } else if(lote){
+      money+=`<dl class="money"><dt>Cobre que sobra no lote</dt><dd>${nf(lote*rend,1)} kg</dd><dt>Venda do cobre do lote</dt><dd>R$ ${nf(lote*rend*pcu,2)}</dd><dt>Empate no lote (lucro zero)</dt><dd>R$ ${nf(lote*teto,2)}</dd></dl>`;
+    }
+  } else if(lote){
+    money=`<dl style="margin-top:12px"><dt>Cobre que sobra no lote</dt><dd>${nf(lote*rend,1)} kg</dd>${ped?`<dt>Você paga pelo lote</dt><dd>R$ ${nf(lote*ped,2)}</dd><dt>Seu custo por kg de cobre</dt><dd>R$ ${nf(ped/rend,2)}</dd>`:""}</dl><p class="note">Coloque por quanto você vende o cobre para saber se compensa.</p>`;
+  }
+  out.innerHTML=`${v}${head}<dl>${rows}</dl>${money}`;
+  
+  last={d:new Date().toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}),mode,desc1,rm,rend,vend,lote,ped,lucro,ok};
+}
+
+const ids=["tot","cu","nvA","gravA","nvB","gravB","extB","vend","lote","ped","pcu","desc","frete","err"];
+ids.forEach(id=>$(id).addEventListener("input",calc));
+$("gravB").addEventListener("change",calc);
+const KEEP=["pcu","desc","err"];
+KEEP.forEach(id=>{try{const v=localStorage.getItem("cabo-"+id);if(v)$(id).value=v}catch(e){} $(id).addEventListener("input",()=>{try{localStorage.setItem("cabo-"+id,$(id).value)}catch(e){}})});
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("err").value=c.dataset.e;try{localStorage.setItem("cabo-err",c.dataset.e)}catch(e){}calc()});
+
+const KEY="cabo-hist-v2";
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+function store(a){try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}}
+function drawHist(){
+  const a=load(), ul=$("hist");
+  if(!a.length){ul.innerHTML='<li><span class="s">Nada salvo ainda. Faça um cálculo e toque em "Salvar no histórico".</span></li>';return}
+  ul.innerHTML=a.map((x,i)=>`<li><div><div class="t">${x.vend?x.vend+" — ":""}${x.desc1} — ${nf(x.rm*100,1)}%${x.ok?"":" ⚠"}</div><div class="s">${x.d}${x.lote?" · "+nf(x.lote)+" kg":""}${x.ped?" a R$ "+nf(x.ped,2)+"/kg":""}${x.lucro!=null?" · lucro R$ "+nf(x.lucro,2):""}${x.rend!==x.rm?" · conta com "+nf(x.rend*100,1)+"%":""}</div></div><button class="ghost" data-i="${i}" type="button" aria-label="Apagar">Apagar</button></li>`).join("");
+  ul.querySelectorAll("button").forEach(b=>b.onclick=()=>{const a=load();a.splice(+b.dataset.i,1);store(a);drawHist()});
+}
+$("save").onclick=()=>{if(!last){alert("Faça um cálculo antes de salvar.");return}const a=load();a.unshift(last);store(a.slice(0,100));drawHist()};
+$("clear").onclick=()=>{["tot","cu","extB","vend","lote","ped"].forEach(id=>$(id).value="");["gravA","gravB"].forEach(id=>$(id).value="");["nvA","nvB"].forEach(id=>$(id).value="1");calc()};
+drawHist();calc();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+</script>
+</body>
+</html>
